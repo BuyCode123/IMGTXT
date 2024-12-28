@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <title>Image Text Reader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    img {
+      width: 90%;
+      height: auto;
+    }
+    .output {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Text Reader</h1>
+  <input type="file" id="imageInput" accept="image/*">
+  <div id="imagePreview"></div>
+  <div class="output" id="output"></div>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const output = document.getElementById('output');
+
+    imageInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        // Display the selected image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected Image">`;
+        };
+        reader.readAsDataURL(file);
+
+        // Perform OCR using Tesseract.js
+        output.textContent = "Processing image...";
+        
+        try {
+          // Convert image to grayscale to focus on text
+          const image = new Image();
+          image.src = URL.createObjectURL(file);
+          image.onload = async () => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0);
+            ctx.filter = "contrast(200%) brightness(100%)"; // Apply grayscale filter to remove colors
+
+            // Now apply OCR on the preprocessed image
+            const processedImage = canvas.toDataURL();
+            
+            const result = await Tesseract.recognize(processedImage, 'eng', {
+              logger: (info) => console.log(info),
+            });
+            output.textContent = `Extracted Text: ${result.data.text}`;
+          };
+        } catch (error) {
+          output.textContent = `Error: ${error.message}`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
