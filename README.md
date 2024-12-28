@@ -1,2 +1,2 @@
 # Image-text-reader
-Made by BuyCode123
+Made by BuyCode123.
